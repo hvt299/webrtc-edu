@@ -6,7 +6,7 @@ $('#div-chatbox').hide();
 socket.on('DANH_SACH_ONLINE', o => {
     $('#div-chat').show();
     $('#div-chatbox').show();
-    $('#div-dang-ky').hide();
+    $('#div-demo').hide();
 
     o.users.forEach(user => {
         const { ten, peerID } = user;
@@ -31,6 +31,11 @@ socket.on('DANH_SACH_ONLINE', o => {
     })
 });
 
+socket.on('DANG_NHAP_THANH_CONG', () => {
+    // Chuyển hướng đến trang home.html
+    window.location.href = 'home.html';
+});
+socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
 socket.on('DANG_KY_THAT_BAI', () => alert('Vui lòng chọn username khác!'));
 
 let localStream;  // Biến để lưu stream local
@@ -74,7 +79,7 @@ const peer = new Peer();
 
 peer.on('open', id => {
     $('#my-peer').append(id);
-    $('#btnSignUp').click(() => {
+    $('#btnContinue').click(() => {
         const username = $('#txtUsername').val();
         if (username != null && username != "") {
             socket.emit('NGUOI_DUNG_DANG_KY', { ten: username, peerID: id });
@@ -125,4 +130,52 @@ $('#btnSend').click(() => {
     } else {
         alert('Tin nhắn không thể bỏ trống!');
     }
+});
+
+$('#btnLogin').click(() => {
+    const username = $('#txtUsername').val();
+    const password = $('#txtPassword').val();
+
+    if (username == null || username == "") {
+        alert('Username không thể bỏ trống!');
+        return;
+    }
+
+    if (password == null || password == "") {
+        alert('Password không thể bỏ trống!');
+        return;
+    }
+
+    // Gửi yêu cầu đăng nhập
+    socket.emit('DANG_NHAP', { username, password });
+});
+
+$('#btnSignUp').click(() => {
+    const username = $('#txtUsername').val();
+    const password = $('#txtPassword').val();
+    const repassword = $('#txtRePassword').val();
+
+    if (username == null || username == "") {
+        alert('Username không thể bỏ trống!');
+        return;
+    }
+
+    if (password == null || password == "") {
+        alert('Password không thể bỏ trống!');
+        return;
+    }
+
+    if (repassword != password) {
+        alert('Xác nhận lại password không khớp');
+        return;
+    }
+
+});
+
+$('#btnBackSignUp').click(() => {
+    window.location.href = 'signup.html';
+});
+
+$('#btnBackLogin').click(() => {
+    window.location.href = 'index.html';
 });

@@ -35,25 +35,45 @@
 }
 
 .call-form__input,
-.register-form__input {
+.register-form__input,
+.login-form__input,
+.signup-form__input {
     height: 34px;
     font-size: 1.4rem;
     padding: 4px;
 }
 
-.register-form {
+.register-form,
+.login-form,
+.signup-form {
     width: 100vw;
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 16px;
 }
 
-.register-form__title {
+.login-form__form,
+.signup-form__form { 
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-form__heading,
+.signup-form__heading {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.register-form__title,
+.login-form__title,
+.signup-form__title {
+    font-style: italic;
     font-size: 1.5rem;
-    font-weight: 500;
-    margin: 10px 0;
+    font-weight: 400;
 }
 
 /* ========================================================== */
