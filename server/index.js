@@ -7,8 +7,8 @@ const io = require('socket.io')(process.env.PORT || 3000, {
 });
 
 // Kết nối đến Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = "https://kqzqauoobpdfudixhsom.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxenFhdW9vYnBkZnVkaXhoc29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAzOTI3OTIsImV4cCI6MjA0NTk2ODc5Mn0.tlpKzVe9M4R3bjnbaKtEJbpMavooPmVr6n_FU8SxuIo";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const arrUserInfo = [];
