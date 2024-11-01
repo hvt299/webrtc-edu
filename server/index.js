@@ -16,6 +16,37 @@ const messages = [];
 
 io.on('connection', socket => {
     
+    // Xử lý sự kiện đăng ký
+    socket.on('DANG_KY', async ({ username, password }) => {
+        // Kiểm tra người dùng đã tồn tại
+        const { data: existingUser, error: checkError } = await supabase
+            .from('account')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+        if (checkError) {
+            console.error('Error checking user:', checkError);
+            return socket.emit('DANG_KY_THAT_BAI', 'Lỗi khi kiểm tra người dùng');
+        }
+
+        if (existingUser) {
+            return socket.emit('DANG_KY_THAT_BAI', 'Username đã tồn tại');
+        }
+
+        // Tạo tài khoản mới
+        const { error: insertError } = await supabase
+            .from('account')
+            .insert([{ username, password, role: 'Học sinh' }]);
+
+        if (insertError) {
+            console.error('Error creating user:', insertError);
+            return socket.emit('DANG_KY_THAT_BAI', 'Lỗi khi tạo tài khoản');
+        }
+
+        socket.emit('DANG_KY_THANH_CONG', 'Đăng ký thành công');
+    });
+    
     socket.on('DANG_NHAP', async ({ username, password }) => {
         const { data: user, error } = await supabase
             .from('account')
@@ -34,7 +65,7 @@ io.on('connection', socket => {
     socket.on('NGUOI_DUNG_DANG_KY', user => {
         const isExist = arrUserInfo.some(e => e.ten === user.ten);
         socket.peerID = user.peerID;
-        if (isExist) return socket.emit('DANG_KY_THAT_BAI');
+        if (isExist) return socket.emit('DANG_KY_THATBAI');
         arrUserInfo.push(user);
         socket.emit('DANH_SACH_ONLINE', {users: arrUserInfo, messages: messages});
         socket.broadcast.emit('CO_NGUOI_DUNG_MOI', user);
