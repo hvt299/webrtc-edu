@@ -25,11 +25,6 @@ io.on('connection', socket => {
             .eq('username', username)
             .single();
 
-        if (checkError) {
-            console.error('Error checking user:', checkError);
-            return socket.emit('DANG_KY_THAT_BAI', 'Lỗi khi kiểm tra người dùng');
-        }
-
         if (existingUser) {
             return socket.emit('DANG_KY_THAT_BAI', 'Username đã tồn tại');
         }
