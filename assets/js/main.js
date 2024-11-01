@@ -35,13 +35,13 @@ socket.on('DANG_NHAP_THANH_CONG', () => {
     // Chuyển hướng đến trang home.html
     window.location.href = 'home.html';
 });
-socket.on('DANG_NHAP_THAT_BAI', message => {
+socket.on('DANG_KY_THANH_CONG', message => {
     alert(message);
     // Chuyển hướng đến trang login.html
     window.location.href = 'login.html';
 });
 
-socket.on('DANG_KY_THANH_CONG', message => alert(message));
+socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
 socket.on('DANG_KY_THAT_BAI', message => alert(message));
 socket.on('DANG_KY_THATBAI', () => alert('Vui lòng chọn username khác!'));
 
