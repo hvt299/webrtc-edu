@@ -37,8 +37,8 @@ socket.on('DANG_NHAP_THANH_CONG', () => {
 });
 socket.on('DANG_KY_THANH_CONG', message => {
     alert(message);
-    // Chuyển hướng đến trang login.html
-    window.location.href = 'login.html';
+    // Chuyển hướng đến trang index.html
+    window.location.href = 'index.html';
 });
 
 socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
