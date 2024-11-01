@@ -8,8 +8,8 @@ const io = require('socket.io')(process.env.PORT || 3000, {
 
 // Kết nối đến Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const arrUserInfo = [];
 const messages = [];
