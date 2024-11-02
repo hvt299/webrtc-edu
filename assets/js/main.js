@@ -33,7 +33,7 @@ socket.on('DANH_SACH_ONLINE', o => {
 
 socket.on('DANG_NHAP_THANH_CONG', () => {
     // Chuyển hướng đến trang home.html
-    window.location.href = 'home.html';
+    window.location.href = 'home.html?username=${encodeURIComponent(username)}';
 });
 socket.on('DANG_KY_THANH_CONG', message => {
     alert(message);

@@ -54,7 +54,7 @@ io.on('connection', socket => {
             return socket.emit('DANG_NHAP_THAT_BAI', 'Tên đăng nhập hoặc mật khẩu không đúng');
         }
 
-        socket.emit('DANG_NHAP_THANH_CONG');
+        socket.emit('DANG_NHAP_THANH_CONG', { username });
     });
     
     socket.on('NGUOI_DUNG_DANG_KY', user => {
