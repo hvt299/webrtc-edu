@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const io = require('socket.io')(process.env.PORT || 3000, {
     cors: {
-        origin: 'https://hvt299.github.io/webrtc-edu',
+        origin: 'https://hvt299.github.io',
         methods: ['GET', 'POST']
     }
 });
