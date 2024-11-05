@@ -5,8 +5,12 @@
 }
 
 #localStream,
-#remoteStream {
+.remote-video {
     width: 100%;
+}
+
+.remote-video-wrapper {
+    margin-bottom: 10px; /* Khoảng cách giữa các video */
 }
 
 .online_list {
@@ -37,7 +41,8 @@
 .call-form__input,
 .register-form__input,
 .login-form__input,
-.signup-form__input {
+.signup-form__input,
+.welcome-form__roomID {
     height: 34px;
     font-size: 1.4rem;
     padding: 4px;
@@ -45,7 +50,8 @@
 
 .register-form,
 .login-form,
-.signup-form {
+.signup-form,
+.welcome {
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -62,15 +68,22 @@
     gap: 10px;
 }
 
+.welcome-form {
+    display: flex;
+    gap: 10px;
+}
+
 .login-form__heading,
-.signup-form__heading {
+.signup-form__heading,
+.welcome-message {
     font-size: 2rem;
     font-weight: 700;
 }
 
 .register-form__title,
 .login-form__title,
-.signup-form__title {
+.signup-form__title,
+.welcome-title {
     font-style: italic;
     font-size: 1.5rem;
     font-weight: 400;

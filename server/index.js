@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const io = require('socket.io')(process.env.PORT || 3000, {
     cors: {
-        origin: 'https://hvt299.github.io',
+        origin: 'https://hvt299.github.io/webrtc-edu',
         methods: ['GET', 'POST']
     }
 });
@@ -13,11 +13,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const arrUserInfo = [];
 const messages = [];
+const rooms = {};
 
 io.on('connection', socket => {
     
     // Xử lý sự kiện đăng ký
-    socket.on('DANG_KY', async ({ username, password }) => {
+    socket.on('DANG_KY', async ({ username, fullname, password }) => {
         // Kiểm tra người dùng đã tồn tại
         const { data: existingUser, error: checkError } = await supabase
             .from('account')
@@ -32,7 +33,7 @@ io.on('connection', socket => {
         // Tạo tài khoản mới
         const { error: insertError } = await supabase
             .from('account')
-            .insert([{ username, password, role: 'Học sinh' }]);
+            .insert([{ username, fullname, password}]);
 
         if (insertError) {
             console.error('Error creating user:', insertError);
@@ -54,7 +55,7 @@ io.on('connection', socket => {
             return socket.emit('DANG_NHAP_THAT_BAI', 'Tên đăng nhập hoặc mật khẩu không đúng');
         }
 
-        socket.emit('DANG_NHAP_THANH_CONG', { username });
+        socket.emit('DANG_NHAP_THANH_CONG', { fullname: user.fullname });
     });
     
     socket.on('NGUOI_DUNG_DANG_KY', user => {
@@ -66,14 +67,25 @@ io.on('connection', socket => {
         socket.broadcast.emit('CO_NGUOI_DUNG_MOI', user);
     });
 
-    socket.on('disconnect', () => {
-        const index = arrUserInfo.findIndex(user => user.peerID === socket.peerID);
-        arrUserInfo.splice(index, 1);
-        io.emit('AI_DO_NGAT_KET_NOI', socket.peerID);
-    });
+    // socket.on('disconnect', () => {
+    //     const index = arrUserInfo.findIndex(user => user.peerID === socket.peerID);
+    //     arrUserInfo.splice(index, 1);
+    //     io.emit('AI_DO_NGAT_KET_NOI', socket.peerID);
+    // });
 
     socket.on('GUI_TIN_NHAN', o => {
         messages.push(o);
         socket.broadcast.emit('TIN_NHAN_MOI', o);
-    })
+    });
+
+    socket.on('join-room', (roomID, userID) => {
+        socket.join(roomID); // Người dùng tham gia phòng
+        // Phát sóng tới tất cả người dùng khác trong phòng, thông báo có người dùng mới
+        socket.to(roomID).emit('user-connected', userID);
+        
+        // Lắng nghe sự kiện ngắt kết nối
+        socket.on('disconnect', () => {
+            socket.to(roomID).emit('user-disconnected', userID);
+        });
+    });
 });
