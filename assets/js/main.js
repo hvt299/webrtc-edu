@@ -1,42 +1,10 @@
 const socket = io('https://webrtc-edu.onrender.com');
 
-// $('#btnCreateRoom').click(() => {
-//     // Chuyển hướng đến trang meeting.html
-//     window.location.href = `meeting.html`;
-// });
-
-socket.on('DANH_SACH_ONLINE', o => {
-    $('#div-chat').show();
-    $('#div-chatbox').show();
-    $('#div-welcome').hide();
-
-    // o.users.forEach(user => {
-    //     const { ten, peerID } = user;
-    //     $('#ulUser').append(`<li id="${peerID}">${ten}</li>`);
-    // });
-
-    // socket.on('CO_NGUOI_DUNG_MOI', user => {
-    //     const { ten, peerID } = user;
-    //     $('#ulUser').append(`<li id="${peerID}">${ten}</li>`);
-    // });
-
-    // socket.on('AI_DO_NGAT_KET_NOI', peerID => {
-    //     $(`#${peerID}`).remove();
-    // });
-
-    // o.messages.forEach(message => {
-    //     document.getElementById("messages").textContent += message.username + ": " + message.message + "\n";
-    // });
-
-    // socket.on('TIN_NHAN_MOI', message => {
-    //     document.getElementById("messages").textContent += message.username + ": " + message.message + "\n";
-    // })
-});
-
 socket.on('DANG_NHAP_THANH_CONG', ({ fullname }) => {
     // Chuyển hướng đến trang home.html
     window.location.href = `home.html?fullname=${encodeURIComponent(fullname)}`;
 });
+
 socket.on('DANG_KY_THANH_CONG', message => {
     alert(message);
     // Chuyển hướng đến trang index.html
@@ -46,8 +14,6 @@ socket.on('DANG_KY_THANH_CONG', message => {
 socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
 socket.on('DANG_KY_THAT_BAI', message => alert(message));
 socket.on('DANG_KY_THATBAI', () => alert('Vui lòng chọn username khác!'));
-
-// let localStream;  // Biến để lưu stream local
 
 function openStream() {
     const config = { audio: true, video: true };
@@ -80,66 +46,6 @@ function playStream(idVideoTag, stream) {
     video.srcObject = stream;
     video.play();
 }
-
-// openStream()
-// .then(stream => playStream('localStream', stream));
-
-// const peer = new Peer();
-
-// peer.on('open', id => {
-//     $('#my-peer').append(id);
-//     $('#btnContinue').click(() => {
-//         const username = $('#txtUsername').val();
-//         if (username != null && username != "") {
-//             socket.emit('NGUOI_DUNG_DANG_KY', { ten: username, peerID: id });
-//         } else {
-//             alert('Username không thể bỏ trống!');
-//         }
-//     });
-// });
-
-// Caller
-// $('#btnCall').click(() => {
-//     const id = $('#remoteID').val();
-//     openStream()
-//     .then(stream => {
-//         playStream('localStream', stream);
-//         const call = peer.call(id, stream);
-//         call.on('stream', remoteStream => playStream('remoteStream', remoteStream));
-//     });
-// });
-
-// Callee
-// peer.on('call', call => {
-//     openStream()
-//     .then(stream => {
-//         call.answer(stream);
-//         playStream('localStream', stream);
-//         call.on('stream', remoteStream => playStream('remoteStream', remoteStream));
-//     });
-// });
-
-// $('#ulUser').on('click', 'li', function() {
-//     const id = $(this).attr('id');
-//     openStream()
-//     .then(stream => {
-//         playStream('localStream', stream);
-//         const call = peer.call(id, stream);
-//         call.on('stream', remoteStream => playStream('remoteStream', remoteStream));
-//     });
-// });
-
-// $('#btnSend').click(() => {
-//     const username = $('#txtUsername').val();
-//     const message = $('#yourMessage').val();
-//     if (message != null && message != "") {
-//         document.getElementById("yourMessage").value = "";
-//         document.getElementById("messages").textContent += "YOU: " + message + "\n";
-//         socket.emit("GUI_TIN_NHAN", {username: username, message: message});
-//     } else {
-//         alert('Tin nhắn không thể bỏ trống!');
-//     }
-// });
 
 $('#btnLogin').click(() => {
     const username = $('#txtUsername').val();
@@ -206,13 +112,23 @@ peer.on('open', id => {
     const roomID = new URLSearchParams(window.location.search).get('roomID');
     console.log('Your peer ID is: ' + id);
     document.getElementById('my-peer').textContent = `ID của tôi: ${id}`;
-    socket.emit('join-room', roomID, id);
+    socket.emit('join-room', roomID, id, fullname);
 });
 
-socket.on('user-connected', peerID => {
-    if (!connectedPeers.has(peerID)) {
-        connectToNewUser(peerID, localStream);
-        connectedPeers.add(peerID);
+socket.on('room-users', (users) => {
+    users.forEach(user => {
+        if (!connectedPeers.has(user.userID)) {
+            $('#ulUser').append(`<li id="${user.userID}">${user.fullname}</li>`);
+            connectedPeers.add(user.userID);
+        }
+    });
+});
+
+socket.on('user-connected', ({ userID, fullname }) => {
+    if (!connectedPeers.has(userID)) {
+        $('#ulUser').append(`<li id="${userID}">${fullname}</li>`);
+        connectToNewUser(userID, localStream);
+        connectedPeers.add(userID);
     }
 });
 
@@ -222,6 +138,7 @@ socket.on('user-disconnected', peerID => {
         if (videoWrapper) {
             videoWrapper.remove(); // Xóa thẻ video khỏi DOM
         }
+        $(`#ulUser li#${peerID}`).remove();
         connectedPeers.delete(peerID); // Xóa peerID khỏi danh sách kết nối
     }
 });
@@ -262,35 +179,15 @@ peer.on('call', call => {
 });
 
 // Khi người dùng nhấn nút "Tạo phòng"
-document.getElementById('btnCreateRoom').addEventListener('click', function() {
+$('#btnCreateRoom').click(() => {
     // Tạo room ID (có thể để người dùng tạo ID hoặc tự động)
     const roomID = generateRandomRoomID();
     alert(`Room ID: ${roomID}. Share this ID with others to join.`);
 });
 
-// Kết nối đến room bằng ID đã nhập
-document.getElementById('btnConnectRoom').addEventListener('click', function() {
-    const remoteID = document.getElementById('roomID').value;
-    
-    // Kết nối dữ liệu
-    const conn = peer.connect(remoteID);
-    connections[remoteID] = conn; // Lưu kết nối dữ liệu
-    
-    conn.on('open', function() {
-        conn.send('Hello from your peer!');
-    });
-
-    // Gọi video đến peer khác
-    const call = peer.call(remoteID, localStream);
-    connections[remoteID] = call; // Lưu kết nối video
-    call.on('stream', function(remoteStream) {
-        addRemoteStream(remoteID, remoteStream);
-    });
-});
-
 // Lấy luồng media từ webcam khi người dùng nhấn nút "Tham gia"
-document.getElementById('btnConnectRoom').addEventListener('click', function() {
-    const remoteID = document.getElementById('roomID').value;
+$('#btnConnectRoom').click(() => {
+    const roomID = document.getElementById('roomID').value;
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then(function(stream) {
@@ -298,14 +195,14 @@ document.getElementById('btnConnectRoom').addEventListener('click', function() {
             const localVideo = document.getElementById('localStream');
             localVideo.srcObject = localStream;
 
-            const conn = peer.connect(remoteID);
+            const conn = peer.connect(roomID);
             conn.on('open', function() {
-                conn.send(`Người dùng ${fullname} đã tham gia vào phòng: ${remoteID}`);
+                conn.send(`Người dùng ${fullname} đã tham gia vào phòng: ${roomID}`);
             });
 
-            const call = peer.call(remoteID, localStream);
+            const call = peer.call(roomID, localStream);
             call.on('stream', function(remoteStream) {
-                addRemoteStream(remoteID, remoteStream);
+                addRemoteStream(roomID, remoteStream);
             });
         })
         .catch(function(err) {
@@ -342,6 +239,33 @@ function addRemoteStream(peerID, stream) {
         videoContainer.appendChild(videoWrapper);
     }
 }
+
+// Gửi tin nhắn
+$('#btnSend').click(() => {
+    const message = $('#yourMessage').val().trim();
+    if (message) {
+        $('#yourMessage').val(''); // Xóa ô nhập sau khi gửi
+        $('#messages').append(`YOU: ${message}\n`); // Hiển thị tin nhắn của chính bạn
+
+        // Gửi tin nhắn lên server
+        socket.emit('GUI_TIN_NHAN', { roomID, fullname, message });
+    } else {
+        alert('Tin nhắn không thể bỏ trống!');
+    }
+});
+
+// Nhận tin nhắn
+// Lấy tin nhắn lịch sử khi vào phòng
+socket.on('LOAD_TIN_NHAN', (messages) => {
+    messages.forEach(({ fullname, message }) => {
+        $('#messages').append(`${fullname}: ${message}\n`);
+    });
+});
+
+// Nhận tin nhắn mới từ server
+socket.on('TIN_NHAN_MOI', ({ fullname, message }) => {
+    $('#messages').append(`${fullname}: ${message}\n`);
+});
 
 // Hàm tạo room ID ngẫu nhiên
 function generateRandomRoomID() {

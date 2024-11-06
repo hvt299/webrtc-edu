@@ -39,7 +39,6 @@
 }
 
 .call-form__input,
-.register-form__input,
 .login-form__input,
 .signup-form__input,
 .welcome-form__roomID {
@@ -48,7 +47,6 @@
     padding: 4px;
 }
 
-.register-form,
 .login-form,
 .signup-form,
 .welcome {
@@ -80,7 +78,6 @@
     font-weight: 700;
 }
 
-.register-form__title,
 .login-form__title,
 .signup-form__title,
 .welcome-title {

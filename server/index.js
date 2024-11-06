@@ -11,8 +11,8 @@ const supabaseUrl = "https://kqzqauoobpdfudixhsom.supabase.co";
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxenFhdW9vYnBkZnVkaXhoc29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAzOTI3OTIsImV4cCI6MjA0NTk2ODc5Mn0.tlpKzVe9M4R3bjnbaKtEJbpMavooPmVr6n_FU8SxuIo";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const arrUserInfo = [];
-const messages = [];
+// const arrUserInfo = [];
+const messages = {};
 const rooms = {};
 
 io.on('connection', socket => {
@@ -57,35 +57,50 @@ io.on('connection', socket => {
 
         socket.emit('DANG_NHAP_THANH_CONG', { fullname: user.fullname });
     });
+
+    socket.on('GUI_TIN_NHAN', ({ roomID, fullname, message }) => {
+        // Lưu tin nhắn vào phòng tương ứng
+        if (!messages[roomID]) {
+            messages[roomID] = [];
+        }
+        messages[roomID].push({ fullname, message });
     
-    socket.on('NGUOI_DUNG_DANG_KY', user => {
-        const isExist = arrUserInfo.some(e => e.ten === user.ten);
-        socket.peerID = user.peerID;
-        if (isExist) return socket.emit('DANG_KY_THATBAI');
-        arrUserInfo.push(user);
-        socket.emit('DANH_SACH_ONLINE', {users: arrUserInfo, messages: messages});
-        socket.broadcast.emit('CO_NGUOI_DUNG_MOI', user);
+        // Phát tin nhắn đến tất cả các user trong phòng
+        socket.to(roomID).emit('TIN_NHAN_MOI', { fullname, message });
     });
 
-    // socket.on('disconnect', () => {
-    //     const index = arrUserInfo.findIndex(user => user.peerID === socket.peerID);
-    //     arrUserInfo.splice(index, 1);
-    //     io.emit('AI_DO_NGAT_KET_NOI', socket.peerID);
-    // });
+    socket.on('join-room', (roomID, userID, fullname) => {
+        socket.join(roomID);
+    
+        // Khởi tạo mảng người dùng nếu phòng chưa tồn tại
+        if (!rooms[roomID]) {
+            rooms[roomID] = [];
+        }
+    
+        // Lưu thông tin người dùng mới vào phòng
+        rooms[roomID].push({ userID, fullname });
+    
+        // Gửi danh sách người dùng hiện tại cho người mới tham gia
+        socket.emit('room-users', rooms[roomID]);
+    
+        // Phát sóng tới tất cả người dùng khác rằng có người mới tham gia
+        socket.to(roomID).emit('user-connected', { userID, fullname });
 
-    socket.on('GUI_TIN_NHAN', o => {
-        messages.push(o);
-        socket.broadcast.emit('TIN_NHAN_MOI', o);
-    });
-
-    socket.on('join-room', (roomID, userID) => {
-        socket.join(roomID); // Người dùng tham gia phòng
-        // Phát sóng tới tất cả người dùng khác trong phòng, thông báo có người dùng mới
-        socket.to(roomID).emit('user-connected', userID);
-        
-        // Lắng nghe sự kiện ngắt kết nối
+        // Gửi tin nhắn lịch sử cho người dùng mới
+        if (messages[roomID]) {
+            socket.emit('LOAD_TIN_NHAN', messages[roomID]);
+        }
+    
+        // Xóa người dùng khi ngắt kết nối
         socket.on('disconnect', () => {
+            rooms[roomID] = rooms[roomID].filter(user => user.userID !== userID);
             socket.to(roomID).emit('user-disconnected', userID);
+    
+            // Xóa phòng nếu không còn người dùng
+            if (rooms[roomID].length === 0) {
+                delete rooms[roomID];
+            }
         });
     });
+    
 });

@@ -31,9 +31,6 @@
                                 <div class="col l-6 m-6 c-12">
                                     <video src="" id="localStream" autoplay muted controls></video>
                                 </div>
-                                <!-- <div class="col l-6 m-6 c-12">
-                                    <video src="" id="remoteStream" autoplay controls></video>
-                                </div> -->
                             </div>
                             <div class="online_list">
                                 <button id="btnToggleMic" class="btn btn--primary">Tắt Mic</button>
@@ -42,10 +39,6 @@
                                 <ul id="ulUser"></ul>
                                 <h3 id="my-peer">ID của tôi: </h3>
                             </div>
-                            <!-- <div class="call-form">
-                                <input type="text" id="remoteID" class="call-form__input" placeholder="Remote ID">
-                                <button id="btnCall" class="btn btn--primary">Gọi</button>
-                            </div> -->
                         </div>
                     </div>
                     <div class="col l-4 m-6 c-12">
@@ -65,57 +58,47 @@
             </div>
         </div>
     </div>
-    <!-- <div id="div-demo" class="register-form">
-        <h3 class="register-form__title">Nhập tên của bạn để tiếp tục</h3>
-        <div class="register-form__form">
-            <input type="text" id="txtUsername" class="register-form__input" placeholder="Enter your username">
-            <button id="btnContinue" class="btn btn--primary">Tiếp tục</button>
-        </div>
-    </div> -->
 </body>
     <script src="./assets/js/main.js"></script>
     <script>
         // Ở phần script trong meeting.html
-const params = new URLSearchParams(window.location.search);
-const roomID = params.get('roomID');
-const fullname = params.get('fullname');
+        const params = new URLSearchParams(window.location.search);
+        const roomID = params.get('roomID');
+        const fullname = params.get('fullname');
 
-// Hiển thị thông tin roomID (tùy chọn)
-if (roomID) {
-    console.log(`Bạn đã tham gia vào phòng: ${roomID}`);
-}
-if (fullname) {
-    document.getElementById('my-peer').textContent = `Chào mừng ${fullname} đến với phòng!`;
-}
+        // Hiển thị thông tin roomID (tùy chọn)
+        if (roomID) {
+            console.log(`Bạn đã tham gia vào phòng: ${roomID}`);
+        }
+        if (fullname) {
+            document.getElementById('my-peer').textContent = `Chào mừng ${fullname} đến với phòng!`;
+        }
 
-// Sau khi người dùng join room
-if (roomID) {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(function(stream) {
-            localStream = stream;
-            const localVideo = document.getElementById('localStream');
-            localVideo.srcObject = localStream;
+        // Sau khi người dùng join room
+        if (roomID) {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(function(stream) {
+                    localStream = stream;
+                    const localVideo = document.getElementById('localStream');
+                    localVideo.srcObject = localStream;
 
-            // Gọi đến peer khác
-            const call = peer.call(roomID, localStream); // Gọi đến peer với ID của room
-            call.on('stream', function(remoteStream) {
-                addRemoteStream(call.peer, remoteStream); // Thêm luồng video từ peer vào trang
-            });
+                    // Gọi đến peer khác
+                    const call = peer.call(roomID, localStream); // Gọi đến peer với ID của room
+                    call.on('stream', function(remoteStream) {
+                        addRemoteStream(call.peer, remoteStream); // Thêm luồng video từ peer vào trang
+                    });
 
-            // Nếu có người gọi đến
-            peer.on('call', function(call) {
-                call.answer(localStream); // Gửi luồng video của mình
-                call.on('stream', function(remoteStream) {
-                    addRemoteStream(call.peer, remoteStream); // Thêm luồng video từ peer khác
+                    // Nếu có người gọi đến
+                    peer.on('call', function(call) {
+                        call.answer(localStream); // Gửi luồng video của mình
+                        call.on('stream', function(remoteStream) {
+                            addRemoteStream(call.peer, remoteStream); // Thêm luồng video từ peer khác
+                        });
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Failed to get local stream', err);
                 });
-            });
-        })
-        .catch(function(err) {
-            console.error('Failed to get local stream', err);
-        });
-}
-
-
-
+        }
     </script>
 </html>

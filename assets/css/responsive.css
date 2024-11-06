@@ -1,5 +1,8 @@
 /* Mobile */
 @media (max-width: 739px) {
+    .welcome-form {
+        flex-direction: column;
+    }
 }
 
 /* Tablet */
