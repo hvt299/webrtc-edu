@@ -29,29 +29,49 @@
             <input type="text" id="roomID" class="welcome-form__roomID" placeholder="Nhập mã phòng">
             <button id="btnConnectRoom" class="btn btn--primary">Tham gia</button>
         </div>
+        <div id="room" class="room">
+            <h3 class="room-title">Danh sách các phòng học (do bạn quản lý):</h3>
+            <ul class="room-list">
+            </ul>
+        </div>
     </div>
     <script src="./assets/js/main.js"></script>
     <script>
         // Lấy giá trị `fullname` từ URL
         const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
         const fullname = params.get('fullname');
+        const role = params.get("role");
         const roomID = params.get('roomID');
     
+        $('#btnCreateRoom').hide();
+        $('#room').hide();
+
+        if (role == "GIAO_VIEN") {
+            $('#btnCreateRoom').show();
+            $('#room').show();
+
+            // Gửi yêu cầu lấy danh sách phòng khi trang được load
+            socket.emit('LAY_DS_PHONG_HOC', username);
+
+            // Nhận danh sách phòng học và hiển thị
+            socket.on('DANH_SACH_PHONG_HOC', (rooms) => {
+                const roomList = document.querySelector('.room-list');
+                roomList.innerHTML = ''; // Xóa danh sách cũ nếu có
+
+                rooms.forEach(room => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'room-item';
+                    listItem.textContent = room.roomid;
+                    roomList.appendChild(listItem);
+                });
+            });
+        }
+
         // Hiển thị `fullname` vào phần tử mong muốn
         if (fullname) {
             document.getElementById('fullnameDisplay').textContent = `Welcome, ${fullname}`;
         }
-
-        // Xử lý sự kiện khi nhấn nút "Tham gia"
-        document.getElementById('btnConnectRoom').addEventListener('click', function() {
-            const roomID = document.getElementById('roomID').value;
-            if (roomID) {
-                // Chuyển đến trang meeting.html và truyền roomID qua URL
-                window.location.href = `meeting.html?roomID=${roomID}&fullname=${fullname}`;
-            } else {
-                alert('Vui lòng nhập mã phòng!');
-            }
-        });
     </script>
 </body>
 </html>

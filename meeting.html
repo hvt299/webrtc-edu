@@ -34,7 +34,8 @@
                             </div>
                             <div class="online_list">
                                 <button id="btnToggleMic" class="btn btn--primary">Tắt Mic</button>
-                                <button id="btnToggleCamera"class="btn btn--primary">Tắt Camera</button>
+                                <button id="btnToggleCamera" class="btn btn--primary">Tắt Camera</button>
+                                <button id="btnShareScreen" class="btn btn--primary">Chia sẻ màn hình</button>
                                 <p class="div-chat__title">Danh sách người dùng trực tuyến:</p>
                                 <ul id="ulUser"></ul>
                                 <h3 id="my-peer">ID của tôi: </h3>
@@ -49,8 +50,10 @@
                             </div>
                             <div class="sendmsg-area">
                                 <p class="div-chatbox__title">Nhập tin nhắn:</p>
+                                <input type="file" id="fileInput" class="div-chatbox__file">
                                 <textarea id="yourMessage"></textarea>
-                                <button id="btnSend" class="btn btn--primary">Gửi</button>
+                                <button id="btnSendMessage" class="btn btn--primary">Gửi tin nhắn</button>
+                                <button id="btnSendFile" class="btn btn--primary">Gửi file</button>
                             </div>
                         </div>
                     </div>

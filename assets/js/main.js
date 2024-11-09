@@ -1,52 +1,5 @@
 const socket = io('https://webrtc-edu.onrender.com');
 
-socket.on('DANG_NHAP_THANH_CONG', ({ fullname }) => {
-    // Chuyển hướng đến trang home.html
-    window.location.href = `home.html?fullname=${encodeURIComponent(fullname)}`;
-});
-
-socket.on('DANG_KY_THANH_CONG', message => {
-    alert(message);
-    // Chuyển hướng đến trang index.html
-    window.location.href = 'index.html';
-});
-
-socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
-socket.on('DANG_KY_THAT_BAI', message => alert(message));
-socket.on('DANG_KY_THATBAI', () => alert('Vui lòng chọn username khác!'));
-
-function openStream() {
-    const config = { audio: true, video: true };
-    return navigator.mediaDevices.getUserMedia(config).then(stream => {
-        localStream = stream;  // Lưu stream để có thể bật/tắt sau này
-        return stream;
-    });
-}
-
-// Thêm sự kiện cho nút tắt/mở camera
-$('#btnToggleCamera').click(() => {
-    if (localStream) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        videoTrack.enabled = !videoTrack.enabled; // Bật/tắt camera
-        $('#btnToggleCamera').text(videoTrack.enabled ? 'Tắt Camera' : 'Mở Camera');
-    }
-});
-
-// Thêm sự kiện cho nút tắt/mở mic
-$('#btnToggleMic').click(() => {
-    if (localStream) {
-        const audioTrack = localStream.getAudioTracks()[0];
-        audioTrack.enabled = !audioTrack.enabled; // Bật/tắt mic
-        $('#btnToggleMic').text(audioTrack.enabled ? 'Tắt Mic' : 'Mở Mic');
-    }
-});
-
-function playStream(idVideoTag, stream) {
-    const video = document.getElementById(idVideoTag);
-    video.srcObject = stream;
-    video.play();
-}
-
 $('#btnLogin').click(() => {
     const username = $('#txtUsername').val();
     const password = $('#txtPassword').val();
@@ -102,6 +55,53 @@ $('#btnBackSignUp').click(() => {
 $('#btnBackLogin').click(() => {
     window.location.href = 'index.html';
 });
+
+socket.on('DANG_NHAP_THANH_CONG', ({ username, fullname, role }) => {
+    // Chuyển hướng đến trang home.html
+    window.location.href = `home.html?username=${encodeURIComponent(username)}&fullname=${encodeURIComponent(fullname)}&role=${encodeURIComponent(role)}`;
+});
+
+socket.on('DANG_KY_THANH_CONG', message => {
+    alert(message);
+    // Chuyển hướng đến trang index.html
+    window.location.href = 'index.html';
+});
+
+socket.on('DANG_NHAP_THAT_BAI', message => alert(message));
+socket.on('DANG_KY_THAT_BAI', message => alert(message));
+socket.on('DANG_KY_THATBAI', () => alert('Vui lòng chọn username khác!'));
+
+function openStream() {
+    const config = { audio: true, video: true };
+    return navigator.mediaDevices.getUserMedia(config).then(stream => {
+        localStream = stream;  // Lưu stream để có thể bật/tắt sau này
+        return stream;
+    });
+}
+
+// Thêm sự kiện cho nút tắt/mở camera
+$('#btnToggleCamera').click(() => {
+    if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        videoTrack.enabled = !videoTrack.enabled; // Bật/tắt camera
+        $('#btnToggleCamera').text(videoTrack.enabled ? 'Tắt Camera' : 'Mở Camera');
+    }
+});
+
+// Thêm sự kiện cho nút tắt/mở mic
+$('#btnToggleMic').click(() => {
+    if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        audioTrack.enabled = !audioTrack.enabled; // Bật/tắt mic
+        $('#btnToggleMic').text(audioTrack.enabled ? 'Tắt Mic' : 'Mở Mic');
+    }
+});
+
+function playStream(idVideoTag, stream) {
+    const video = document.getElementById(idVideoTag);
+    video.srcObject = stream;
+    video.play();
+}
 
 const peer = new Peer(); // Tạo một Peer mới
 const connectedPeers = new Set(); // Đối tượng lưu trữ các kết nối peer
@@ -182,6 +182,7 @@ peer.on('call', call => {
 $('#btnCreateRoom').click(() => {
     // Tạo room ID (có thể để người dùng tạo ID hoặc tự động)
     const roomID = generateRandomRoomID();
+    socket.emit('TAO_PHONG_HOC_MOI', { roomID, username });
     alert(`Room ID: ${roomID}. Share this ID with others to join.`);
 });
 
@@ -189,25 +190,41 @@ $('#btnCreateRoom').click(() => {
 $('#btnConnectRoom').click(() => {
     const roomID = document.getElementById('roomID').value;
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(function(stream) {
-            localStream = stream;
-            const localVideo = document.getElementById('localStream');
-            localVideo.srcObject = localStream;
+    if (roomID) {
+        socket.emit('KIEM_TRA_PHONG', { roomID });
 
-            const conn = peer.connect(roomID);
-            conn.on('open', function() {
-                conn.send(`Người dùng ${fullname} đã tham gia vào phòng: ${roomID}`);
-            });
+        // Nhận phản hồi từ server khi mã phòng hợp lệ
+        socket.on('PHONG_HOP_LE', ({ roomID }) => {
+            // Chuyển hướng đến trang meeting.html và truyền roomID qua URL
+            window.location.href = `meeting.html?roomID=${roomID}&fullname=${fullname}`;
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(function(stream) {
+                localStream = stream;
+                const localVideo = document.getElementById('localStream');
+                localVideo.srcObject = localStream;
 
-            const call = peer.call(roomID, localStream);
-            call.on('stream', function(remoteStream) {
-                addRemoteStream(roomID, remoteStream);
+                const conn = peer.connect(roomID);
+                conn.on('open', function() {
+                    conn.send(`Người dùng ${fullname} đã tham gia vào phòng: ${roomID}`);
+                });
+
+                const call = peer.call(roomID, localStream);
+                call.on('stream', function(remoteStream) {
+                    addRemoteStream(roomID, remoteStream);
+                });
+            })
+            .catch(function(err) {
+                console.log('Failed to get local stream', err);
             });
-        })
-        .catch(function(err) {
-            console.log('Failed to get local stream', err);
         });
+
+        // Nhận phản hồi từ server khi mã phòng không hợp lệ
+        socket.on('PHONG_KHONG_HOP_LE', () => {
+            alert('Mã phòng không tồn tại! Vui lòng kiểm tra lại.');
+        });
+    } else {
+        alert('Vui lòng nhập mã phòng!');
+    }
 });
 
 
@@ -241,7 +258,7 @@ function addRemoteStream(peerID, stream) {
 }
 
 // Gửi tin nhắn
-$('#btnSend').click(() => {
+$('#btnSendMessage').click(() => {
     const message = $('#yourMessage').val().trim();
     if (message) {
         $('#yourMessage').val(''); // Xóa ô nhập sau khi gửi

@@ -55,7 +55,53 @@ io.on('connection', socket => {
             return socket.emit('DANG_NHAP_THAT_BAI', 'Tên đăng nhập hoặc mật khẩu không đúng');
         }
 
-        socket.emit('DANG_NHAP_THANH_CONG', { fullname: user.fullname });
+        socket.emit('DANG_NHAP_THANH_CONG', { username: user.username, fullname: user.fullname, role: user.role });
+    });
+
+    socket.on('LAY_DS_PHONG_HOC', async (username) => {
+        const { data: rooms, error } = await supabase
+            .from('room')
+            .select('roomid')
+            .eq('username', username);
+    
+        if (error) {
+            console.error('Lỗi khi lấy danh sách phòng học:', error);
+            return;
+        }
+    
+        // Gửi danh sách phòng học lại cho client
+        socket.emit('DANH_SACH_PHONG_HOC', rooms);
+    });
+
+    socket.on('TAO_PHONG_HOC_MOI', async ({ roomID, username }) => {
+        const { data, error } = await supabase
+            .from('room')
+            .insert([
+                { roomid: roomID, username: username }
+            ]);
+    
+        if (error) {
+            console.error('Lỗi khi tạo phòng học:', error);
+            socket.emit('TAO_PHONG_HOC_THAT_BAI', 'Không thể tạo phòng học mới. Vui lòng thử lại.');
+        } else {
+            socket.emit('TAO_PHONG_HOC_THANH_CONG', { roomID, username });
+        }
+    });
+
+    socket.on('KIEM_TRA_PHONG', async ({ roomID }) => {
+        const { data: room, error } = await supabase
+            .from('room')
+            .select('*')
+            .eq('roomid', roomID)
+            .single();
+    
+        if (room && !error) {
+            // Nếu mã phòng tồn tại, gửi phản hồi hợp lệ về client
+            socket.emit('PHONG_HOP_LE', { roomID });
+        } else {
+            // Nếu mã phòng không tồn tại, gửi phản hồi không hợp lệ về client
+            socket.emit('PHONG_KHONG_HOP_LE');
+        }
     });
 
     socket.on('GUI_TIN_NHAN', ({ roomID, fullname, message }) => {
